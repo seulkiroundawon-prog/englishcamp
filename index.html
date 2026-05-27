@@ -93,7 +93,7 @@
   .school-header.chang{background:linear-gradient(135deg,#1e8449,#27ae60);}
   .school-header.sam{background:linear-gradient(135deg,#b07d0a,#d68910);}
 
-  .gender-section{margin-bottom:12px;}
+  .gender-section{margin-bottom:16px;}
   .gender-label{
     font-size:12px;font-weight:700;color:var(--muted);
     display:flex;align-items:center;gap:6px;margin-bottom:8px;
@@ -105,20 +105,32 @@
   .gender-label.teacher-m::before{background:#8e44ad;}
   .gender-label.teacher-f::before{background:#e84393;}
 
-  .room-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .room-card{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
-  .room-num-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-  .room-num{font-size:15px;font-weight:900;color:var(--navy);}
-  .room-count{font-size:11px;color:var(--muted);}
-  .room-occupant{font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text);}
-  .room-occupant:last-child{border-bottom:none;}
+  /* 숙소 표 */
+  .room-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+  .room-tbl th{background:#f0f4f8;padding:8px 10px;font-weight:700;color:var(--navy);font-size:12px;text-align:center;}
+  .room-tbl th:last-child{text-align:left;}
+  .room-tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .room-tbl tr:last-child td{border-bottom:none;}
+  .room-tbl tr:hover td{background:#f8fafc;}
+  .room-tbl td.dong-cell{text-align:center;font-weight:700;color:var(--navy);white-space:nowrap;width:52px;}
+  .room-tbl td.ho-cell{text-align:center;font-weight:700;color:var(--sky);white-space:nowrap;width:56px;}
+  .room-tbl td.people-cell{color:var(--text);}
+  .room-tbl td.del-cell{text-align:center;width:28px;}
+
+  .people-tag{display:inline-block;background:#f0f4f8;border-radius:20px;padding:2px 8px;font-size:11px;margin:2px 2px;}
+  [data-edit="true"] .people-tag{cursor:pointer;border:1px dashed var(--sky);}
+  [data-edit="true"] .people-tag:hover{background:#e8f4fd;}
+
   .add-room-btn{
     width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:10px;
     background:transparent;color:var(--muted);font-size:12px;cursor:pointer;
-    font-family:inherit;display:none;
+    font-family:inherit;display:none;margin-top:6px;
   }
   [data-edit="true"] .add-room-btn{display:block;}
   [data-edit="true"] .add-room-btn:hover{border-color:var(--sky);color:var(--sky);}
+  .add-person-btn{background:none;border:1px dashed var(--sky);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--sky);cursor:pointer;margin:2px;display:none;}
+  [data-edit="true"] .add-person-btn{display:inline-block;}
+  .dong-input,.ho-input{border:1.5px solid var(--sky);border-radius:6px;padding:2px 4px;font-size:12px;font-family:inherit;outline:none;width:100%;text-align:center;}
 
   /* CAMP */
   .camp-hero{background:linear-gradient(135deg,#1a2744,#2c4a8a);border-radius:14px;padding:20px;color:white;margin-bottom:14px;text-align:center;}
@@ -169,6 +181,7 @@
     <div class="tab" onclick="showPage('schedule',this)">🗓️ 일정표</div>
     <div class="tab" onclick="showPage('rooms',this)">🏨 숙소배정</div>
     <div class="tab" onclick="showPage('camp',this)">📋 캠프담당자</div>
+    <div class="tab" onclick="showPage('info',this)">📌 주요안내</div>
   </div>
 </div>
 
@@ -208,9 +221,21 @@
 
   <!-- ② 교사연락망 -->
   <div class="page" id="page-teachers">
-    <div class="card"><div class="card-title">외북초등학교</div><div id="contacts-wae"></div></div>
-    <div class="card"><div class="card-title">창수초등학교</div><div id="contacts-chang"></div></div>
-    <div class="card"><div class="card-title">삼성중학교</div><div id="contacts-sam"></div></div>
+    <div class="card">
+      <div class="card-title">삼성중학교</div>
+      <div id="contacts-sam"></div>
+      <button class="add-room-btn" onclick="addTeacher('sam')">+ 교사 추가</button>
+    </div>
+    <div class="card">
+      <div class="card-title">외북초등학교</div>
+      <div id="contacts-wae"></div>
+      <button class="add-room-btn" onclick="addTeacher('wae')">+ 교사 추가</button>
+    </div>
+    <div class="card">
+      <div class="card-title">창수초등학교</div>
+      <div id="contacts-chang"></div>
+      <button class="add-room-btn" onclick="addTeacher('chang')">+ 교사 추가</button>
+    </div>
   </div>
 
   <!-- ③ 일정표 -->
@@ -307,14 +332,30 @@
       </div></div>
       <div class="info-row"><span class="info-icon">🏥</span><div><div class="info-label">인근 병원</div><div class="info-val editable" data-key="camp_hosp">병원명 · 연락처</div></div></div>
     </div>
+  </div>
+</div>
+
+  <!-- ⑥ 주요안내 -->
+  <div class="page" id="page-info">
     <div class="card">
-      <div class="card-title">주요 안내</div>
+      <div class="card-title">생활 안내</div>
       <div class="info-row"><span class="info-icon">🚿</span><div><div class="info-label">샤워 시간</div><div class="info-val editable" data-key="camp_shower">16:30 ~ 18:00</div></div></div>
       <div class="info-row"><span class="info-icon">🍽️</span><div><div class="info-label">식사 장소</div><div class="info-val editable" data-key="camp_meal">캠프 내 식당</div></div></div>
       <div class="info-row"><span class="info-icon">🔒</span><div><div class="info-label">취침 점호</div><div class="info-val editable" data-key="camp_lights">22:00 각 방 점호</div></div></div>
+      <div class="info-row"><span class="info-icon">🧺</span><div><div class="info-label">짐 보관</div><div class="info-val editable" data-key="info_luggage">내용 입력</div></div></div>
+      <div class="info-row"><span class="info-icon">🚌</span><div><div class="info-label">집합 장소</div><div class="info-val editable" data-key="info_gather">삼성중학교 체육관 앞</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">준비물</div>
+      <div id="checklist-container"></div>
+      <button class="add-room-btn" style="margin-top:8px" onclick="addCheckItem()">+ 항목 추가</button>
+    </div>
+    <div class="card">
+      <div class="card-title">유의사항</div>
+      <div id="notice-container"></div>
+      <button class="add-room-btn" style="margin-top:8px" onclick="addNoticeItem()">+ 항목 추가</button>
     </div>
   </div>
-</div>
 
 <script>
 // ========== 비밀번호 ==========
@@ -339,6 +380,10 @@ function enterEditMode(){
   document.getElementById('editBtn').textContent='✅ 완료';
   document.getElementById('editIndicator').classList.add('show');
   bindEditables();
+  renderChecklist();
+  renderNotices();
+  renderTeachers();
+  renderRooms();
 }
 function exitEditMode(){
   editMode=false;
@@ -346,6 +391,10 @@ function exitEditMode(){
   document.getElementById('editBtn').textContent='✏️ 편집';
   document.getElementById('editIndicator').classList.remove('show');
   saveAll();
+  renderChecklist();
+  renderNotices();
+  renderTeachers();
+  renderRooms();
 }
 
 // ========== 데이터 ==========
@@ -381,22 +430,22 @@ const data = {
   // 학교별 남/여 학생 + 남/여 교사 방
   rooms:{
     wae:{
-      male:[{num:'',people:['']}],
-      female:[{num:'',people:['']}],
-      teacherM:[{num:'',people:['']}],
-      teacherF:[{num:'',people:['']}],
+      male:[{dong:'',ho:'',people:['']}],
+      female:[{dong:'',ho:'',people:['']}],
+      teacherM:[{dong:'',ho:'',people:['']}],
+      teacherF:[{dong:'',ho:'',people:['']}],
     },
     chang:{
-      male:[{num:'',people:['']}],
-      female:[{num:'',people:['']}],
-      teacherM:[{num:'',people:['']}],
-      teacherF:[{num:'',people:['']}],
+      male:[{dong:'',ho:'',people:['']}],
+      female:[{dong:'',ho:'',people:['']}],
+      teacherM:[{dong:'',ho:'',people:['']}],
+      teacherF:[{dong:'',ho:'',people:['']}],
     },
     sam:{
-      male:[{num:'',people:['']}],
-      female:[{num:'',people:['']}],
-      teacherM:[{num:'',people:['']}],
-      teacherF:[{num:'',people:['']}],
+      male:[{dong:'',ho:'',people:['']}],
+      female:[{dong:'',ho:'',people:['']}],
+      teacherM:[{dong:'',ho:'',people:['']}],
+      teacherF:[{dong:'',ho:'',people:['']}],
     },
   },
   kv:{
@@ -406,7 +455,10 @@ const data = {
     camp_meal:'캠프 내 식당',camp_lights:'22:00 각 방 점호',
     date1:'6월 17일 (수)',date2:'6월 18일 (목)',date3:'6월 19일 (금)',
     d1_1:'',d1_2:'',d1_3:'',d2_1:'',d2_2:'',d3_1:'',
-  }
+    info_luggage:'',info_gather:'삼성중학교 체육관 앞',
+  },
+  checklist:['운동화','물','개인 상비약 (멀미약 등)','우산','세면도구','잠옷 대용 트레이닝복','여벌 옷'],
+  notices:['귀중품·고액 현금 지참 금지','숙소 내 다른 방 무단 출입 금지','지도교사 허락 없이 체험 장소 이탈 금지','베란다 출입 금지','22:00 이후 취침 준수']
 };
 
 function loadAll(){
@@ -415,8 +467,25 @@ function loadAll(){
     if(s){const d=JSON.parse(s);
       if(d.students)data.students=d.students;
       if(d.teachers)data.teachers=d.teachers;
-      if(d.rooms)data.rooms=d.rooms;
+      if(d.rooms){
+        // 마이그레이션: 기존 num → dong/ho
+        ['wae','chang','sam'].forEach(sk=>{
+          ['male','female','teacherM','teacherF'].forEach(sec=>{
+            if(d.rooms[sk]&&d.rooms[sk][sec]){
+              d.rooms[sk][sec]=d.rooms[sk][sec].map(r=>{
+                if(r.num!==undefined&&r.dong===undefined){
+                  return{dong:'',ho:r.num||'',people:r.people||['']};
+                }
+                return r;
+              });
+            }
+          });
+        });
+        data.rooms=d.rooms;
+      }
       if(d.kv)Object.assign(data.kv,d.kv);
+      if(d.checklist)data.checklist=d.checklist;
+      if(d.notices)data.notices=d.notices;
     }
   }catch(e){}
 }
@@ -487,43 +556,74 @@ const roomSections=[
 function renderRooms(){
   const container=document.getElementById('rooms-container');
   let html='';
-  ['wae','chang','sam'].forEach(sk=>{
+  ['sam','wae','chang'].forEach(sk=>{
     const sm=schoolMeta[sk];
     html+=`<div class="school-section">
       <div class="school-header ${sm.cls}">🏫 ${sm.label}</div>`;
     roomSections.forEach(sec=>{
       const rooms=data.rooms[sk][sec.key];
+      const totalPeople=rooms.reduce((acc,r)=>acc+r.people.filter(p=>p).length,0);
       html+=`<div class="gender-section">
-        <div class="gender-label ${sec.genderCls}">${sec.icon} ${sec.label}</div>
-        <div class="room-grid" id="rg-${sk}-${sec.key}">
-          ${rooms.map((r,ri)=>roomCardHTML(sk,sec.key,r,ri)).join('')}
-        </div>
+        <div class="gender-label ${sec.genderCls}">${sec.icon} ${sec.label} <span style="margin-left:4px;font-weight:400">(${totalPeople}명 · ${rooms.length}실)</span></div>
+        <table class="room-tbl">
+          <thead><tr><th>동</th><th>호수</th><th>학생</th><th></th></tr></thead>
+          <tbody>${rooms.map((r,ri)=>roomRowHTML(sk,sec.key,r,ri)).join('')}</tbody>
+        </table>
         <button class="add-room-btn" onclick="addRoom('${sk}','${sec.key}')">+ 방 추가</button>
       </div>`;
     });
     html+='</div>';
   });
   container.innerHTML=html;
-  if(editMode)bindEditables();
 }
 
-function roomCardHTML(sk,secKey,r,ri){
-  const people=r.people.map((p,pi)=>
-    `<div class="room-occupant editable" data-rsk="${sk}" data-rsec="${secKey}" data-ri="${ri}" data-pi="${pi}">👤 ${p||'이름 입력'}</div>`
+function roomRowHTML(sk,secKey,r,ri){
+  const dong=r.dong||'';
+  const ho=r.ho||'';
+  const peopleTags=r.people.map((p,pi)=>
+    `<span class="people-tag" onclick="if(editMode)editPersonInline(this,'${sk}','${secKey}',${ri},${pi})">${p||'이름'}</span>`
   ).join('');
-  const addPerson=editMode?`<div class="room-occupant" style="color:var(--sky);cursor:pointer;font-size:12px;" onclick="addPerson('${sk}','${secKey}',${ri})">+ 인원 추가</div>`:'';
-  return `<div class="room-card">
-    <div class="room-num-row">
-      <div class="room-num editable" data-rsk="${sk}" data-rsec="${secKey}" data-ri="${ri}" data-rfield="num">${r.num||'호수 입력'}</div>
-      <div class="room-count">${r.people.filter(p=>p).length}명</div>
-    </div>
-    ${people}
-    ${addPerson}
-  </div>`;
+  const addPersonBtn=`<button class="add-person-btn" onclick="addPerson('${sk}','${secKey}',${ri})">+</button>`;
+  const delBtn=editMode?`<span style="color:var(--red);cursor:pointer;font-size:16px;" onclick="removeRoom('${sk}','${secKey}',${ri})">×</span>`:'';
+  const dongCell=editMode
+    ?`<input class="dong-input" placeholder="-" value="${dong}" oninput="data.rooms['${sk}']['${secKey}'][${ri}].dong=this.value;saveAll();">`
+    :`${dong?dong+'동':'-'}`;
+  const hoCell=editMode
+    ?`<input class="ho-input" placeholder="-" value="${ho}" oninput="data.rooms['${sk}']['${secKey}'][${ri}].ho=this.value;saveAll();">`
+    :`${ho?ho+'호':'-'}`;
+  return `<tr>
+    <td class="dong-cell">${dongCell}</td>
+    <td class="ho-cell">${hoCell}</td>
+    <td class="people-cell">${peopleTags}${addPersonBtn}</td>
+    <td class="del-cell">${delBtn}</td>
+  </tr>`;
+}
+
+function editPersonInline(el,sk,secKey,ri,pi){
+  if(!editMode)return;
+  const cur=data.rooms[sk][secKey][ri].people[pi]||'';
+  const inp=document.createElement('input');
+  inp.className='dong-input';inp.style.width='80px';inp.value=cur;
+  el.replaceWith(inp);inp.focus();
+  const finish=()=>{
+    const v=inp.value.trim();
+    data.rooms[sk][secKey][ri].people[pi]=v;
+    saveAll();renderRooms();
+  };
+  inp.addEventListener('blur',finish);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
 }
 
 function addRoom(sk,secKey){
-  data.rooms[sk][secKey].push({num:'',people:['']});
+  data.rooms[sk][secKey].push({dong:'',ho:'',people:['']});
+  saveAll();renderRooms();
+}
+function addTeacher(key){
+  data.teachers[key].push({name:'',role:'역할 입력',phone:'',emoji:'👨‍🏫'});
+  saveAll();renderTeachers();
+}
+function removeRoom(sk,secKey,ri){
+  data.rooms[sk][secKey].splice(ri,1);
   saveAll();renderRooms();
 }
 function addPerson(sk,secKey,ri){
@@ -546,6 +646,39 @@ function updateCampPhone(kvKey,val,btnId){
   document.getElementById(btnId).href='tel:'+val;
   saveAll();
 }
+
+// ========== 체크리스트/유의사항 ==========
+function renderChecklist(){
+  const el=document.getElementById('checklist-container');
+  if(!el)return;
+  el.innerHTML=data.checklist.map((item,i)=>`
+    <div class="info-row" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <span>✅</span>
+        <div class="info-val editable" data-ctype="check" data-ci="${i}">${item}</div>
+      </div>
+      ${editMode?`<span style="color:var(--red);cursor:pointer;font-size:18px;padding-left:8px" onclick="removeItem('checklist',${i})">×</span>`:''}
+    </div>
+  `).join('');
+  if(editMode)bindEditables();
+}
+function renderNotices(){
+  const el=document.getElementById('notice-container');
+  if(!el)return;
+  el.innerHTML=data.notices.map((item,i)=>`
+    <div class="info-row" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <span>⚠️</span>
+        <div class="info-val editable" data-ctype="notice" data-ci="${i}">${item}</div>
+      </div>
+      ${editMode?`<span style="color:var(--red);cursor:pointer;font-size:18px;padding-left:8px" onclick="removeItem('notices',${i})">×</span>`:''}
+    </div>
+  `).join('');
+  if(editMode)bindEditables();
+}
+function addCheckItem(){data.checklist.push('준비물 입력');saveAll();renderChecklist();}
+function addNoticeItem(){data.notices.push('유의사항 입력');saveAll();renderNotices();}
+function removeItem(type,i){data[type].splice(i,1);saveAll();if(type==='checklist')renderChecklist();else renderNotices();}
 
 // ========== 편집 ==========
 function bindEditables(){
@@ -583,10 +716,17 @@ function startEdit(el){
     }
     // room
     if(el.dataset.rsk!==undefined){
-      const{rsk,rsec,ri,rfield,pi}=el.dataset;
-      if(rfield==='num') data.rooms[rsk][rsec][+ri].num=val;
-      else data.rooms[rsk][rsec][+ri].people[+pi]=val;
+      const{rsk,rsec,ri,pi}=el.dataset;
+      data.rooms[rsk][rsec][+ri].people[+pi]=val;
       saveAll();renderRooms();return;
+    }
+    // checklist/notice
+    if(el.dataset.ctype){
+      const arr=el.dataset.ctype==='check'?data.checklist:data.notices;
+      arr[+el.dataset.ci]=val;
+      saveAll();
+      if(el.dataset.ctype==='check')renderChecklist();else renderNotices();
+      return;
     }
     // kv
     if(el.dataset.key){
@@ -613,6 +753,8 @@ renderStudents();
 renderTeachers();
 renderRooms();
 renderKV();
+renderChecklist();
+renderNotices();
 </script>
 </body>
 </html>
