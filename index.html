@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 체험학습 인솔 교사 안내</title>
+<title>2026 체험학습 교사 안내</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -473,9 +473,10 @@ const data = {
 
 async function loadAll(){
   // 먼저 localStorage로 빠르게 렌더 (UX)
+  let hasLocal = false;
   try{
     const s=localStorage.getItem('fieldtrip_v2');
-    if(s) applyData(JSON.parse(s));
+    if(s){ applyData(JSON.parse(s)); hasLocal=true; }
   }catch(e){}
 
   // Google Sheets에서 최신 데이터 불러오기
@@ -484,22 +485,33 @@ async function loadAll(){
     const res = await fetch(`${API_URL}?action=load`);
     const json = await res.json();
     if(json.ok && json.data){
+      // Sheets에 데이터 있으면 적용
       applyData(json.data);
       localStorage.setItem('fieldtrip_v2', JSON.stringify(json.data));
       showToast('✅ 최신 데이터 불러왔어요!','#27ae60');
-      // 화면 다시 그리기
-      renderStudents();
-      renderTeachers();
-      renderRooms();
-      renderKV();
-      renderChecklist();
-      renderNotices();
+      renderAll();
+    } else if(hasLocal){
+      // Sheets 비어있고 localStorage에 데이터 있으면 → Sheets에 자동 업로드
+      showToast('📤 기존 데이터를 저장 중...','#f5a623');
+      await saveAll(true); // 토스트 없이 저장
+      showToast('✅ 기존 데이터 복원 완료!','#27ae60');
+      renderAll();
     } else {
-      showToast('📦 저장된 데이터 없음','#7a8aaa');
+      showToast('📦 새로 시작해요!','#7a8aaa');
     }
   }catch(e){
-    showToast('⚠️ 오프라인 모드','#f5a623');
+    showToast('⚠️ 오프라인 모드 — 로컬 데이터 사용 중','#f5a623');
+    if(hasLocal) renderAll();
   }
+}
+
+function renderAll(){
+  renderStudents();
+  renderTeachers();
+  renderRooms();
+  renderKV();
+  renderChecklist();
+  renderNotices();
 }
 
 function applyData(d){
@@ -535,7 +547,7 @@ function showToast(msg,color){
   window._toastTimer=setTimeout(()=>t.classList.remove('show'),2000);
 }
 
-async function saveAll(){
+async function saveAll(silent=false){
   // localStorage 백업
   try{localStorage.setItem('fieldtrip_v2',JSON.stringify(data));}catch(e){}
   // Google Sheets 저장
@@ -543,10 +555,12 @@ async function saveAll(){
     const encoded = encodeURIComponent(JSON.stringify(data));
     const res = await fetch(`${API_URL}?action=save&data=${encoded}`);
     const json = await res.json();
-    if(json.ok) showToast('💾 저장됐어요!');
-    else showToast('⚠️ 저장 실패: '+json.error,'#e74c3c');
+    if(!silent){
+      if(json.ok) showToast('💾 저장됐어요!');
+      else showToast('⚠️ 저장 실패: '+json.error,'#e74c3c');
+    }
   }catch(e){
-    showToast('⚠️ 네트워크 오류','#e74c3c');
+    if(!silent) showToast('⚠️ 네트워크 오류','#e74c3c');
   }
 }
 
@@ -606,10 +620,8 @@ const schoolMeta={
   sam:{label:'삼성중학교',cls:'sam'},
 };
 const roomSections=[
-  {key:'male',label:'남학생 방',genderCls:'male',icon:'🍋'},
-  {key:'female',label:'여학생 방',genderCls:'female',icon:'🍒'},
-  {key:'teacherM',label:'남교사 방',genderCls:'teacher-m',icon:'🍈'},
-  {key:'teacherF',label:'여교사 방',genderCls:'teacher-f',icon:'🍊'},
+  {key:'male',label:'남학생 방',genderCls:'male',icon:'🔵'},
+  {key:'female',label:'여학생 방',genderCls:'female',icon:'🔴'},
 ];
 
 function renderRooms(){
@@ -815,14 +827,8 @@ function showPage(id,tabEl){
 }
 
 // ========== INIT ==========
-// 초기 렌더 (빈 데이터)
-renderStudents();
-renderTeachers();
-renderRooms();
-renderKV();
-renderChecklist();
-renderNotices();
-// Google Sheets에서 불러오기 (비동기)
+// 초기 렌더 후 Google Sheets에서 불러오기
+renderAll();
 loadAll();
 </script>
 </body>
