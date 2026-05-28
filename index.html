@@ -482,8 +482,7 @@ async function loadAll(){
   // Google Sheets에서 최신 데이터 불러오기
   try{
     showToast('⏳ 데이터 불러오는 중...','#4a90d9');
-    const res = await fetch(`${API_URL}?action=load`);
-    const json = await res.json();
+    const json = await jsonp(`${API_URL}?action=load`);
     if(json.ok && json.data){
       // Sheets에 데이터 있으면 적용
       applyData(json.data);
@@ -547,20 +546,35 @@ function showToast(msg,color){
   window._toastTimer=setTimeout(()=>t.classList.remove('show'),2000);
 }
 
+// JSONP 호출 헬퍼
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb = 'cb_'+Date.now();
+    const script = document.createElement('script');
+    script.src = url + '&callback=' + cb;
+    window[cb] = (data)=>{
+      delete window[cb];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = ()=>{ delete window[cb]; document.body.removeChild(script); reject(new Error('network')); };
+    document.body.appendChild(script);
+  });
+}
+
 async function saveAll(silent=false){
   // localStorage 백업
   try{localStorage.setItem('fieldtrip_v2',JSON.stringify(data));}catch(e){}
-  // Google Sheets 저장
+  // Google Sheets 저장 (JSONP)
   try{
     const encoded = encodeURIComponent(JSON.stringify(data));
-    const res = await fetch(`${API_URL}?action=save&data=${encoded}`);
-    const json = await res.json();
+    const json = await jsonp(`${API_URL}?action=save&data=${encoded}`);
     if(!silent){
       if(json.ok) showToast('💾 저장됐어요!');
       else showToast('⚠️ 저장 실패: '+json.error,'#e74c3c');
     }
   }catch(e){
-    if(!silent) showToast('⚠️ 네트워크 오류','#e74c3c');
+    if(!silent) showToast('⚠️ 저장 실패 (로컬만 저장됨)','#f5a623');
   }
 }
 
@@ -620,8 +634,8 @@ const schoolMeta={
   sam:{label:'삼성중학교',cls:'sam'},
 };
 const roomSections=[
-  {key:'male',label:'남학생 방',genderCls:'male',icon:'🔵'},
-  {key:'female',label:'여학생 방',genderCls:'female',icon:'🔴'},
+  {key:'male',label:'남학생 방',genderCls:'male',icon:'🫐'},
+  {key:'female',label:'여학생 방',genderCls:'female',icon:'🍒'},
 ];
 
 function renderRooms(){
