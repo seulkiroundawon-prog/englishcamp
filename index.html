@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 체험학습 교사 안내</title>
+<title>2026 체험학습 인솔 교사 안내</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -410,17 +410,22 @@ function exitEditMode(){
 // ========== 데이터 ==========
 const data = {
   students:[
+    {school:'삼성중',grade:'1학년',total:0,male:0,female:0},
+    {school:'삼성중',grade:'2학년',total:0,male:0,female:0},
+    {school:'삼성중',grade:'3학년',total:0,male:0,female:0},
     {school:'외북초',grade:'4학년',total:0,male:0,female:0},
     {school:'외북초',grade:'5학년',total:0,male:0,female:0},
     {school:'외북초',grade:'6학년',total:0,male:0,female:0},
     {school:'창수초',grade:'4학년',total:0,male:0,female:0},
     {school:'창수초',grade:'5학년',total:0,male:0,female:0},
     {school:'창수초',grade:'6학년',total:0,male:0,female:0},
-    {school:'삼성중',grade:'1학년',total:0,male:0,female:0},
-    {school:'삼성중',grade:'2학년',total:0,male:0,female:0},
-    {school:'삼성중',grade:'3학년',total:0,male:0,female:0},
   ],
   teachers:{
+    sam:[
+      {name:'',role:'인솔교사 (1학년)',phone:'',emoji:'👨‍🏫'},
+      {name:'',role:'인솔교사 (2학년)',phone:'',emoji:'👩‍🏫'},
+      {name:'',role:'인솔교사 (3학년)',phone:'',emoji:'👨‍🏫'},
+    ],
     wae:[
       {name:'',role:'인솔교사 (4학년)',phone:'',emoji:'👨‍🏫'},
       {name:'',role:'인솔교사 (5학년)',phone:'',emoji:'👩‍🏫'},
@@ -431,14 +436,15 @@ const data = {
       {name:'',role:'인솔교사 (5학년)',phone:'',emoji:'👨‍🏫'},
       {name:'',role:'인솔교사 (6학년)',phone:'',emoji:'👩‍🏫'},
     ],
-    sam:[
-      {name:'',role:'인솔교사 (1학년)',phone:'',emoji:'👨‍🏫'},
-      {name:'',role:'인솔교사 (2학년)',phone:'',emoji:'👩‍🏫'},
-      {name:'',role:'인솔교사 (3학년)',phone:'',emoji:'👨‍🏫'},
-    ],
   },
   // 학교별 남/여 학생 + 남/여 교사 방
   rooms:{
+    sam:{
+      male:[{dong:'',ho:'',people:['']}],
+      female:[{dong:'',ho:'',people:['']}],
+      teacherM:[{dong:'',ho:'',people:['']}],
+      teacherF:[{dong:'',ho:'',people:['']}],
+    },
     wae:{
       male:[{dong:'',ho:'',people:['']}],
       female:[{dong:'',ho:'',people:['']}],
@@ -446,12 +452,6 @@ const data = {
       teacherF:[{dong:'',ho:'',people:['']}],
     },
     chang:{
-      male:[{dong:'',ho:'',people:['']}],
-      female:[{dong:'',ho:'',people:['']}],
-      teacherM:[{dong:'',ho:'',people:['']}],
-      teacherF:[{dong:'',ho:'',people:['']}],
-    },
-    sam:{
       male:[{dong:'',ho:'',people:['']}],
       female:[{dong:'',ho:'',people:['']}],
       teacherM:[{dong:'',ho:'',people:['']}],
@@ -606,10 +606,10 @@ const schoolMeta={
   sam:{label:'삼성중학교',cls:'sam'},
 };
 const roomSections=[
-  {key:'male',label:'남학생 숙소',genderCls:'male',icon:'🍋'},
-  {key:'female',label:'여학생 숙소',genderCls:'female',icon:'🍉'},
-  {key:'teacherM',label:'남교사 숙소',genderCls:'teacher-m',icon:'🥕'},
-  {key:'teacherF',label:'여교사 숙소',genderCls:'teacher-f',icon:'🫜'},
+  {key:'male',label:'남학생 방',genderCls:'male',icon:'🍋'},
+  {key:'female',label:'여학생 방',genderCls:'female',icon:'🍒'},
+  {key:'teacherM',label:'남교사 방',genderCls:'teacher-m',icon:'🍈'},
+  {key:'teacherF',label:'여교사 방',genderCls:'teacher-f',icon:'🍊'},
 ];
 
 function renderRooms(){
