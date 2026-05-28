@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 영어캠프 인솔교사 안내</title>
+<title>2026 체험학습 교사 안내</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -143,6 +143,15 @@
   .info-label{font-size:11px;color:var(--muted);margin-bottom:2px;}
   .info-val{font-size:13px;font-weight:600;}
 
+  /* TOAST */
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:#1a2744;color:white;padding:10px 20px;border-radius:30px;
+    font-size:13px;font-weight:600;z-index:300;
+    transition:transform 0.3s ease,opacity 0.3s ease;opacity:0;pointer-events:none;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
   /* MODAL */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
   .modal-overlay.show{display:flex;}
@@ -198,8 +207,9 @@
   </div>
 </div>
 
+<div class="toast" id="toast">💾 저장됐어요!</div>
 <div class="content">
-  <div class="edit-indicator" id="editIndicator">✏️ 편집 모드 — 항목을 클릭하면 수정할 수 있어요</div>
+  <div class="edit-indicator" id="editIndicator">✏️ 편집 모드 — 수정하면 자동 저장돼요</div>
 
   <!-- ① 참가학생 -->
   <div class="page active" id="page-students">
@@ -390,11 +400,11 @@ function exitEditMode(){
   document.body.removeAttribute('data-edit');
   document.getElementById('editBtn').textContent='✏️ 편집';
   document.getElementById('editIndicator').classList.remove('show');
-  saveAll();
   renderChecklist();
   renderNotices();
   renderTeachers();
   renderRooms();
+  saveAll();
 }
 
 // ========== 데이터 ==========
@@ -461,35 +471,84 @@ const data = {
   notices:['귀중품·고액 현금 지참 금지','숙소 내 다른 방 무단 출입 금지','지도교사 허락 없이 체험 장소 이탈 금지','베란다 출입 금지','22:00 이후 취침 준수']
 };
 
-function loadAll(){
+async function loadAll(){
+  // 먼저 localStorage로 빠르게 렌더 (UX)
   try{
     const s=localStorage.getItem('fieldtrip_v2');
-    if(s){const d=JSON.parse(s);
-      if(d.students)data.students=d.students;
-      if(d.teachers)data.teachers=d.teachers;
-      if(d.rooms){
-        // 마이그레이션: 기존 num → dong/ho
-        ['wae','chang','sam'].forEach(sk=>{
-          ['male','female','teacherM','teacherF'].forEach(sec=>{
-            if(d.rooms[sk]&&d.rooms[sk][sec]){
-              d.rooms[sk][sec]=d.rooms[sk][sec].map(r=>{
-                if(r.num!==undefined&&r.dong===undefined){
-                  return{dong:'',ho:r.num||'',people:r.people||['']};
-                }
-                return r;
-              });
-            }
-          });
-        });
-        data.rooms=d.rooms;
-      }
-      if(d.kv)Object.assign(data.kv,d.kv);
-      if(d.checklist)data.checklist=d.checklist;
-      if(d.notices)data.notices=d.notices;
-    }
+    if(s) applyData(JSON.parse(s));
   }catch(e){}
+
+  // Google Sheets에서 최신 데이터 불러오기
+  try{
+    showToast('⏳ 데이터 불러오는 중...','#4a90d9');
+    const res = await fetch(`${API_URL}?action=load`);
+    const json = await res.json();
+    if(json.ok && json.data){
+      applyData(json.data);
+      localStorage.setItem('fieldtrip_v2', JSON.stringify(json.data));
+      showToast('✅ 최신 데이터 불러왔어요!','#27ae60');
+      // 화면 다시 그리기
+      renderStudents();
+      renderTeachers();
+      renderRooms();
+      renderKV();
+      renderChecklist();
+      renderNotices();
+    } else {
+      showToast('📦 저장된 데이터 없음','#7a8aaa');
+    }
+  }catch(e){
+    showToast('⚠️ 오프라인 모드','#f5a623');
+  }
 }
-function saveAll(){localStorage.setItem('fieldtrip_v2',JSON.stringify(data));}
+
+function applyData(d){
+  if(!d) return;
+  if(d.students&&Array.isArray(d.students)) data.students=d.students;
+  if(d.teachers&&d.teachers.wae) data.teachers=d.teachers;
+  if(d.rooms){
+    ['wae','chang','sam'].forEach(sk=>{
+      ['male','female','teacherM','teacherF'].forEach(sec=>{
+        if(d.rooms[sk]&&d.rooms[sk][sec]){
+          d.rooms[sk][sec]=d.rooms[sk][sec].map(r=>{
+            if(r.num!==undefined&&r.dong===undefined)
+              return{dong:'',ho:r.num||'',people:r.people||['']};
+            return r;
+          });
+        }
+      });
+    });
+    data.rooms=d.rooms;
+  }
+  if(d.kv&&typeof d.kv==='object') Object.assign(data.kv,d.kv);
+  if(d.checklist&&Array.isArray(d.checklist)) data.checklist=d.checklist;
+  if(d.notices&&Array.isArray(d.notices)) data.notices=d.notices;
+}
+const API_URL = 'https://script.google.com/macros/s/AKfycbyKAHLI6dqC4Kfdg9XU5Qd_H1uPJs4YzYvay9rroic9swfg0XzdDFhPOGLKU3V8kH6b/exec';
+
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg||'💾 저장됐어요!';
+  t.style.background=color||'#1a2744';
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+async function saveAll(){
+  // localStorage 백업
+  try{localStorage.setItem('fieldtrip_v2',JSON.stringify(data));}catch(e){}
+  // Google Sheets 저장
+  try{
+    const encoded = encodeURIComponent(JSON.stringify(data));
+    const res = await fetch(`${API_URL}?action=save&data=${encoded}`);
+    const json = await res.json();
+    if(json.ok) showToast('💾 저장됐어요!');
+    else showToast('⚠️ 저장 실패: '+json.error,'#e74c3c');
+  }catch(e){
+    showToast('⚠️ 네트워크 오류','#e74c3c');
+  }
+}
 
 // ========== 학생 ==========
 function schoolLabel(s){
@@ -547,10 +606,10 @@ const schoolMeta={
   sam:{label:'삼성중학교',cls:'sam'},
 };
 const roomSections=[
-  {key:'male',label:'남학생 방',genderCls:'male',icon:'👦🏻'},
-  {key:'female',label:'여학생 방',genderCls:'female',icon:'👩🏻'},
-  {key:'teacherM',label:'남교사 방',genderCls:'teacher-m',icon:'🧑🏻‍🏫'},
-  {key:'teacherF',label:'여교사 방',genderCls:'teacher-f',icon:'👩🏻‍🏫'},
+  {key:'male',label:'남학생 숙소',genderCls:'male',icon:'🍋'},
+  {key:'female',label:'여학생 숙소',genderCls:'female',icon:'🍉'},
+  {key:'teacherM',label:'남교사 숙소',genderCls:'teacher-m',icon:'🥕'},
+  {key:'teacherF',label:'여교사 숙소',genderCls:'teacher-f',icon:'🫜'},
 ];
 
 function renderRooms(){
@@ -619,8 +678,16 @@ function addRoom(sk,secKey){
   saveAll();renderRooms();
 }
 function addTeacher(key){
+  // 현재 화면의 phone input 값들을 data에 먼저 반영
+  ['wae','chang','sam'].forEach(k=>{
+    data.teachers[k].forEach((t,i)=>{
+      const inp=document.querySelector(`#contacts-${k} .contact-card:nth-child(${i+1}) .phone-input`);
+      if(inp)t.phone=inp.value;
+    });
+  });
   data.teachers[key].push({name:'',role:'역할 입력',phone:'',emoji:'👨‍🏫'});
-  saveAll();renderTeachers();
+  saveAll();
+  renderTeachers();
 }
 function removeRoom(sk,secKey,ri){
   data.rooms[sk][secKey].splice(ri,1);
@@ -748,13 +815,15 @@ function showPage(id,tabEl){
 }
 
 // ========== INIT ==========
-loadAll();
+// 초기 렌더 (빈 데이터)
 renderStudents();
 renderTeachers();
 renderRooms();
 renderKV();
 renderChecklist();
 renderNotices();
+// Google Sheets에서 불러오기 (비동기)
+loadAll();
 </script>
 </body>
 </html>
